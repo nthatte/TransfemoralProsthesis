@@ -37,7 +37,7 @@ ADC_USES_PORT(ADCA)
 ADC_USES_PORT(ADCB)
 
 int main(void) {
-	// Initilize the clock to 32 Mhz oscillator
+	// Initialize the clock to 32 Mhz oscillator
 	if(cpu_set_clock_source(cpu_32mhz_clock) == false) {
 		PORTC.DIRSET = 1;
 		PORTC.OUTSET = 1;
@@ -49,10 +49,10 @@ int main(void) {
 	cpu_configure_interrupt_level(cpu_interrupt_level_low, true);
 	sei();
 
-	// Initilize the LED port
+	// Initialize the LED port
 	LED_PORT.DIRSET = LED_MASK;
 
-	// Initilize the id DIP switches
+	// Initialize the id DIP switches
 	PORTCFG.MPCMASK =  MEDULLA_ID_MASK;
 	MEDULLA_ID_PORT.PIN0CTRL = PORT_OPC_PULLUP_gc;
 	_delay_ms(1);
@@ -63,7 +63,7 @@ int main(void) {
 		amplifier_debug();
 	}
 
-	// Initilize the debug uart
+	// Initialize the debug uart
 	debug_port = uart_init_port(&PORTE, &USARTE0, uart_baud_115200, debug_uart_tx_buffer, DEBUG_UART_TX_BUFFER_SIZE, debug_uart_rx_buffer, DEBUG_UART_RX_BUFFER_SIZE);
 
 	// Don't enable this port if this is a right hip medulla, because that will interfere with the IMU communication
@@ -71,24 +71,24 @@ int main(void) {
 		uart_connect_port(&debug_port, true);
 
 	#if defined DEBUG_LOW || defined DEBUG_HIGH
-	printf("[Medulla] Initilizing Medulla\n");
+	printf("[Medulla] Initializing Medulla\n");
 	#endif
 
-	// Initilizing EStop
+	// Initializing EStop
 	#ifdef DEBUG_HIGH
-	printf("[Medulla] Initilizing E-Stop\n");
+	printf("[Medulla] Initializing E-Stop\n");
 	#endif
 	estop_port = estop_init_port(io_init_pin(&PORTJ,6),io_init_pin(&PORTJ,7),&TCE0,main_estop);
 
-	// Initilizing timestamp counter
+	// Initializing timestamp counter
 	#ifdef DEBUG_HIGH
-	printf("[Medulla] Initilizing timestamp counter\n");
+	printf("[Medulla] Initializing timestamp counter\n");
 	#endif
 	TIMESTAMP_COUNTER.CTRLA = TC_CLKSEL_DIV2_gc;
 
-	// Initilize the EtherCAT
+	// Initialize the EtherCAT
 	#ifdef DEBUG_HIGH
-	printf("[Medulla] Initilizing EtherCAT\n");
+	printf("[Medulla] Initializing EtherCAT\n");
 	#endif
 	ecat_port = ecat_init_slave(&PORTE,&SPIE,io_init_pin(&PORTE,0),io_init_pin(&PORTE,1));
 	// set the the IRQ pin so it sets the IRQ flags on the falling edge so we can check that for the DC clock
@@ -105,7 +105,7 @@ int main(void) {
 			#if defined DEBUG_HIGH || defined DEBUG_LOW
 			printf("loading leg medulla.\n");
 			#endif
-			initilize = leg_initilize;
+			initialize = leg_initialize;
 			enable_outputs = leg_enable_outputs;
 			disable_outputs = leg_disable_outputs;
 			update_inputs = leg_update_inputs;
@@ -122,7 +122,7 @@ int main(void) {
 			#if defined DEBUG_HIGH || defined DEBUG_LOW
 			printf("loading hip medulla.\n");
 			#endif
-			initilize = hip_initilize;
+			initialize = hip_initialize;
 			enable_outputs = hip_enable_outputs;
 			disable_outputs = hip_disable_outputs;
 			update_inputs = hip_update_inputs;
@@ -139,7 +139,7 @@ int main(void) {
 			#if defined DEBUG_HIGH || defined DEBUG_LOW
 			printf("loading boom medulla.\n");
 			#endif
-			initilize = boom_initilize;
+			initialize = boom_initialize;
 			enable_outputs = boom_enable_outputs;
 			disable_outputs = boom_disable_outputs;
 			update_inputs = boom_update_inputs;
@@ -166,14 +166,14 @@ int main(void) {
 			while (1);
 	}
 
-	// Wait for a second so all the hardware can initilize first
+	// Wait for a second so all the hardware can initialize first
 	_delay_ms(1000);
 
-	// Call the initilize function to initilize all the hardware for this medulla
+	// Call the initialize function to initialize all the hardware for this medulla
 	#ifdef DEBUG_HIGH
 	printf("[Medulla] Calling init for specific medulla\n");
 	#endif
-	initilize(medulla_id, &ecat_port, ecat_tx_sm_buffer, ecat_rx_sm_buffer, &commanded_state, &current_state, &packet_counter, &TIMESTAMP_COUNTER, &master_watchdog_counter);
+	initialize(medulla_id, &ecat_port, ecat_tx_sm_buffer, ecat_rx_sm_buffer, &commanded_state, &current_state, &packet_counter, &TIMESTAMP_COUNTER, &master_watchdog_counter);
 	
 	#ifdef DEBUG_HIGH
 	printf("[Medulla] Switching printf to low level interrupt\n");
@@ -190,7 +190,7 @@ int main(void) {
 	#ifdef DEBUG_HIGH
 	printf("[Medulla] Enabling E-Stop\n");
 	#endif
-	// and enable the estop initilize the estop
+	// and enable the estop initialize the estop
 	estop_enable_port(&estop_port);
 
 	#if defined DEUBG_LOW || defined DEBUG_HIGH

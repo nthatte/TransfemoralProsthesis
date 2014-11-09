@@ -73,7 +73,7 @@ uint16_t hip_logic_voltage_counter;
 bool hip_send_current_read;
 TC0_t *hip_timestamp_timer;
 
-void hip_initilize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer, uint8_t *rx_sm_buffer, medulla_state_t **commanded_state, medulla_state_t **current_state, uint8_t **packet_counter,TC0_t *timestamp_timer, uint16_t **master_watchdog) {
+void hip_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer, uint8_t *rx_sm_buffer, medulla_state_t **commanded_state, medulla_state_t **current_state, uint8_t **packet_counter,TC0_t *timestamp_timer, uint16_t **master_watchdog) {
 
 	hip_thermistor_counter = 0;
 	hip_motor_voltage_counter = 0;
@@ -82,68 +82,68 @@ void hip_initilize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer, 
 	hip_damping_cnt = 0;
 
 	#if defined DEBUG_LOW || defined DEBUG_HIGH
-	printf("[Medulla Hip] Initilizing leg with ID: %04x\n",id);
+	printf("[Medulla Hip] Initializing leg with ID: %04x\n",id);
 	#endif
 	
 	#ifdef DEBUG_HIGH
-	printf("[Medulla Hip] Initilizing sync managers\n");
+	printf("[Medulla Hip] Initializing sync managers\n");
 	#endif
 	ecat_init_sync_managers(ecat_slave, rx_sm_buffer, MEDULLA_HIP_OUTPUTS_SIZE, 0x1000, tx_sm_buffer, MEDULLA_HIP_INPUTS_SIZE, 0x2000);
 
 	#ifdef DEBUG_HIGH
-	printf("[Medulla Hip] Initilizing PDO entries\n");
+	printf("[Medulla Hip] Initializing PDO entries\n");
 	#endif
 	ecat_configure_pdo_entries(ecat_slave, hip_rx_pdos, MEDULLA_HIP_RX_PDO_COUNT, hip_tx_pdos, 15); 
 
 	#ifdef DEUBG_HIGH
-	printf("[Medulla Hip] Initilizing limit switches\n");
+	printf("[Medulla Hip] Initializing limit switches\n");
 	#endif
 	hip_limit_sw_port = limit_sw_init_port(&PORTK,0,&TCF0,hip_estop);
 
 	#ifdef DEBUG_HIGH
-	printf("[Medulla Hip] Initilizing ADC ports\n");
+	printf("[Medulla Hip] Initializing ADC ports\n");
 	#endif
 	adc_port_a = adc_init_port(&ADCA);
 	adc_port_b = adc_init_port(&ADCB);
 
 	#ifdef DEBUG_HIGH
-	printf("[Medulla Hip] Initilizing Thermistor ADC pins\n");
+	printf("[Medulla Hip] Initializing Thermistor ADC pins\n");
 	#endif
 	adc_init_pin(&adc_port_a,1,hip_thermistor_pdo+0);
 	adc_init_pin(&adc_port_a,2,hip_thermistor_pdo+1);
 	adc_init_pin(&adc_port_a,3,hip_thermistor_pdo+2);
 
 	#ifdef DEBUG_HIGH
-	printf("[Medulla Hip] Initilizing voltage monitoring pins\n");
+	printf("[Medulla Hip] Initializing voltage monitoring pins\n");
 	#endif
 	adc_init_pin(&adc_port_b,6,hip_logic_voltage_pdo);
 	adc_init_pin(&adc_port_b,7,hip_motor_voltage_pdo);
 
 	#ifdef DEBUG_HIGH
-	printf("[Medulla Hip] Initilize robot current monitoring pin\n");
+	printf("[Medulla Hip] Initialize robot current monitoring pin\n");
 	#endif
 	adc_init_pin(&adc_port_b,0,robot_current_50_pdo);
 	adc_init_pin(&adc_port_b,1,robot_current_600_pdo);
 
 	#ifdef DEBUG_HIGH
-	printf("[Medulla Hip] Initilizing hip encoder\n");
+	printf("[Medulla Hip] Initailizing hip encoder\n");
 	#endif
 	hip_encoder = renishaw_ssi_encoder_init(&PORTC,&SPIC,timestamp_timer,hip_encoder_pdo,hip_encoder_timestamp_pdo);
 
 	#ifdef DEBUG_HIGH
-	printf("[Medulla Hip] Initilizing incremental encoder\n");
+	printf("[Medulla Hip] Initializing incremental encoder\n");
 	#endif
 	hip_inc_encoder = quadrature_encoder_init(io_init_pin(&PORTD,0),io_init_pin(&PORTD,5),false,&TCF1,16384);
 
 	#ifdef DEBUG_HIGH
-	printf("[Medulla Hip] Initilizing amplifiers\n");
+	printf("[Medulla Hip] Initializing amplifiers\n");
 	#endif
-	initilize_amp(false, hip_measured_current_pdo, 0);
+	initialize_amp(false, hip_measured_current_pdo, 0);
 
 	#ifdef USING_IMU
 	if (id == MEDULLA_RIGHT_HIP_ID) {
 		#ifdef DEBUG_HIGH
-		printf("[Medulla Hip] Initializin IMU\n");
+		printf("[Medulla Hip] Initializing IMU\n");
 		#endif
 		//IMU at RS232 interface (USARTE0)
 		init_IMU(&PORTE, &USARTE0, &hip_imu, hip_imu_data_pdo);
