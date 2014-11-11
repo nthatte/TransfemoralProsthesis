@@ -28,15 +28,19 @@ typedef enum {
 #define MEDULLA_HIP_OUTPUTS_SIZE                                               7
 #define MEDULLA_BOOM_INPUTS_SIZE                                              24
 #define MEDULLA_BOOM_OUTPUTS_SIZE                                              3
+#define MEDULLA_KNEE_INPUTS_SIZE                                              47
+#define MEDULLA_KNEE_OUTPUTS_SIZE                                              7
 
 // Number of PDO entries in each direction for each Medulla type
 #define MEDULLA_LEG_TX_PDO_COUNT                                              24
 #define MEDULLA_LEG_RX_PDO_COUNT                                               3
-//#define MEDULLA_HIP_TX_PDO_COUNT                                              31
+//#define MEDULLA_HIP_TX_PDO_COUNT                                            31
 #define MEDULLA_HIP_TX_PDO_COUNT                                              17
 #define MEDULLA_HIP_RX_PDO_COUNT                                               3
 #define MEDULLA_BOOM_TX_PDO_COUNT                                             11
 #define MEDULLA_BOOM_RX_PDO_COUNT                                              2
+#define MEDULLA_KNEE_TX_PDO_COUNT                                             24
+#define MEDULLA_KNEE_RX_PDO_COUNT                                              3
 
 // Medulla IDs
 #define MEDULLA_ID_PREFIX_MASK                                              0x30
@@ -44,6 +48,7 @@ typedef enum {
 #define MEDULLA_HIP_ID_PREFIX                                               0x10
 #define MEDULLA_BOOM_ID_PREFIX                                              0x20
 #define MEDULLA_TEST_ID_PREFIX                                              0x30
+#define MEDULLA_KNEE_ID_PREFIX                                              0x40
 
 #define MEDULLA_AMPLIFIER_DEBUG                                             0x00
 #define MEDULLA_LEFT_LEG_A_ID                       (MEDULLA_LEG_ID_PREFIX  + 1)
@@ -53,12 +58,14 @@ typedef enum {
 #define MEDULLA_RIGHT_LEG_B_ID                      (MEDULLA_LEG_ID_PREFIX  + 4)
 #define MEDULLA_RIGHT_HIP_ID                        (MEDULLA_HIP_ID_PREFIX  + 1)
 #define MEDULLA_BOOM_ID                             (MEDULLA_BOOM_ID_PREFIX + 0)
+#define MEDULLA_KNEE_ID                             (MEDULLA_KNEE_ID_PREFIX + 0)
 
 // Limit switch masks for medullas
 #define MEDULLA_LLEG_ASIDE_LSW_MASK                    0b00111111
 #define MEDULLA_LLEG_BSIDE_LSW_MASK                    0b00011111
 #define MEDULLA_RLEG_ASIDE_LSW_MASK                    0b00111111
 #define MEDULLA_RLEG_BSIDE_LSW_MASK                    0b00011111
+#define MEDULLA_KNEE_LSW_MASK                          0b00000111
 
 // Medulla errors
 typedef enum {
