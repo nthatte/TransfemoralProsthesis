@@ -14,7 +14,7 @@ SOURCES = medulla.c medulla_leg.c medulla_hip.c medulla_boom.c amplifier.c
 SRCDIR = src
 
 # Medulla_lib stuff
-MEDULLA_LIB_DIR = ../../../medulla/firmware/medulla_lib
+MEDULLA_LIB_DIR = ../../medulla/firmware/medulla_lib
 DEBUG_LEVEL = -DDEBUG_LOW
 #DEBUG_LEVEL = -DDEBUG_HIGH
 
