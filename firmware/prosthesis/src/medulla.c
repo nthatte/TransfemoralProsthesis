@@ -169,12 +169,14 @@ int main(void) {
 			wait_loop = knee_wait_loop;
 			break;
 
+        /*
 		case MEDULLA_TEST_ID_PREFIX:
 			#if defined DEBUG_HIGH || defined DEBUG_LOW
 			printf("loading test medulla.\n");
 			#endif
 			/// TODO: Add code to map function pointers to test medulla
 			break;
+        */
 		default:
 			#if defined DEBUG_HIGH || defined DEBUG_LOW
 			printf(" unknown medulla.\n");

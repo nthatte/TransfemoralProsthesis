@@ -5,7 +5,6 @@
 // RxPDO entries
 medulla_state_t *knee_command_state_pdo;
 uint16_t *knee_counter_pdo;
-int32_t *knee_motor_current_pdo;
 
 // TxPDO entries
 uint8_t *knee_medulla_id_pdo;
@@ -13,7 +12,6 @@ medulla_state_t *knee_current_state_pdo;
 uint8_t *knee_medulla_counter_pdo;
 uint8_t *knee_error_flags_pdo;
 uint8_t *knee_limit_switch_pdo;
-uint16_t *toe_sensor_pdo;
 
 uint32_t *motor_encoder_pdo;
 uint16_t *motor_encoder_timestamp_pdo;
@@ -26,8 +24,7 @@ uint16_t *logic_voltage_pdo;
 uint16_t *thermistor_pdo; // Pointer to all the thermistors, you can access them as an array
 
 ecat_pdo_entry_t knee_rx_pdos[] = {{((void**)(&knee_command_state_pdo)),1},
-                              {((void**)(&knee_counter_pdo)),2},
-                              {((void**)(&knee_motor_current_pdo)),4}};
+                              {((void**)(&knee_counter_pdo)),2}};
 
 ecat_pdo_entry_t knee_tx_pdos[] = {{((void**)(&knee_medulla_id_pdo)),1},
                               {((void**)(&knee_current_state_pdo)),1},
@@ -46,17 +43,16 @@ ecat_pdo_entry_t knee_tx_pdos[] = {{((void**)(&knee_medulla_id_pdo)),1},
 limit_sw_port_t limit_sw_port;
 biss_encoder_t knee_encoder, motor_encoder;
 adc_port_t adc_port_a, adc_port_b;
-int32_t last_incremental;
 
 // variables for filtering thermistor and voltage values
 uint8_t limit_switch_counter;
+uint8_t knee_damping_cnt;
 uint8_t thermistor_counter;
 uint16_t logic_voltage_counter;
 uint8_t motor_encoder_error_counter;
 uint8_t knee_encoder_error_counter;
 bool knee_send_current_read;
 TC0_t *knee_timestamp_timer;
-int32_t prev_motor_position;
 uint16_t knee_knee_adc_aux4;
 uint16_t knee_therm_prev_val[6];
 
@@ -75,22 +71,17 @@ void knee_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer
 	#ifdef DEBUG_HIGH
 	printf("[Medulla Knee] Initializing sync managers\n");
 	#endif
-	ecat_init_sync_managers(ecat_slave, rx_sm_buffer, MEDULLA_KNEE_OUTPUTS_SIZE, 0x1000, tx_sm_buffer, MEDULLA_knee_INPUTS_SIZE, 0x2000);
+	ecat_init_sync_managers(ecat_slave, rx_sm_buffer, MEDULLA_KNEE_OUTPUTS_SIZE, 0x1000, tx_sm_buffer, MEDULLA_KNEE_INPUTS_SIZE, 0x2000);
 
 	#ifdef DEBUG_HIGH
 	printf("[Medulla Knee] Initializing PDO entries\n");
 	#endif
-	ecat_configure_pdo_entries(ecat_slave, knee_rx_pdos, MEDULLA_KNEE_RX_PDO_COUNT, knee_tx_pdos, MEDULLA_knee_TX_PDO_COUNT-5); 
+	ecat_configure_pdo_entries(ecat_slave, knee_rx_pdos, MEDULLA_KNEE_RX_PDO_COUNT, knee_tx_pdos, MEDULLA_KNEE_TX_PDO_COUNT-5); 
 
 	#ifdef DEUBG_HIGH
 	printf("[Medulla knee] Initializing limit switches\n");
 	#endif
-	switch (id) {
-		case MEDULLA_LEFT_knee_A_ID: limit_sw_port = limit_sw_init_port(&PORTK,MEDULLA_Lknee_ASIDE_LSW_MASK,&TCF0,knee_estop); break;
-		case MEDULLA_LEFT_knee_B_ID: limit_sw_port = limit_sw_init_port(&PORTK,MEDULLA_Lknee_BSIDE_LSW_MASK,&TCF0,knee_estop); break;
-		case MEDULLA_RIGHT_knee_A_ID: limit_sw_port = limit_sw_init_port(&PORTK,MEDULLA_Rknee_ASIDE_LSW_MASK,&TCF0,knee_estop); break;
-		case MEDULLA_RIGHT_knee_B_ID: limit_sw_port = limit_sw_init_port(&PORTK,MEDULLA_Rknee_BSIDE_LSW_MASK,&TCF0,knee_estop); break;
-	}
+	limit_sw_port = limit_sw_init_port(&PORTK,MEDULLA_KNEE_LSW_MASK,&TCF0,knee_estop);
 	limit_switch_counter = 0;
 
 	#ifdef DEBUG_HIGH
@@ -113,7 +104,6 @@ void knee_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer
 	printf("[Medulla knee] Initializing voltage monitoring pins\n");
 	#endif
 	adc_init_pin(&adc_port_b,6,logic_voltage_pdo);
-	adc_init_pin(&adc_port_b,7,motor_voltage_pdo);
 
 	#ifdef DEBUG_HIGH
 	printf("[Medulla knee] Initializing motor encoder\n");
@@ -124,17 +114,6 @@ void knee_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer
 	printf("[Medulla knee] Initializing knee encoder\n");
 	#endif
 	knee_encoder = biss_encoder_init(&PORTD,&SPID,timestamp_timer,32,knee_encoder_pdo,knee_encoder_timestamp_pdo);
-
-	#ifdef DEBUG_HIGH
-	printf("[Medulla knee] Initializing incremental encoder\n");
-	#endif
-	inc_encoder = quadrature_encoder_init(io_init_pin(&PORTD,0),io_init_pin(&PORTD,5),false,&TCF1,16384);
-
-	#ifdef DEBUG_HIGH
-	printf("[Medulla knee] Initializing amplifiers\n");
-	#endif
-	initialize_amp(true, measured_current_amp1_pdo, measured_current_amp2_pdo);
-
 
 	// Start reading the ADCs
 	adc_start_read(&adc_port_a);
@@ -156,7 +135,6 @@ void knee_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer
 	*commanded_state = knee_command_state_pdo;
 	*current_state = knee_current_state_pdo;
 }
-
 inline void knee_enable_outputs(void) {
 	limit_sw_enable_port(&limit_sw_port);
 }
@@ -184,7 +162,6 @@ void knee_update_inputs(uint8_t id) {
 	while (!biss_encoder_read_complete(&knee_encoder));
 
 	// make sure our encoder data is accurate, if it is, then update, if it's not, then increment the error coutner.
-	prev_motor_position = (int32_t)*motor_encoder_pdo;
 	if (biss_encoder_data_valid(&motor_encoder)) {
 		biss_encoder_process_data(&motor_encoder);
 	}

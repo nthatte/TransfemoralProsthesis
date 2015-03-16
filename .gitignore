@@ -26,3 +26,4 @@ typekit/
 orocos.log
 gui_config.yaml
 robot_definitions/robot_variant_defs.h
+*.DS_Store
