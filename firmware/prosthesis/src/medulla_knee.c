@@ -19,6 +19,9 @@ uint16_t *motor_encoder_timestamp_pdo;
 uint32_t *knee_encoder_pdo;
 uint16_t *knee_encoder_timestamp_pdo;
 
+uint32_t *ankle_encoder_pdo;
+uint16_t *ankle_encoder_timestamp_pdo;
+
 uint16_t *logic_voltage_pdo;
 
 uint16_t *thermistor_pdo; // Pointer to all the thermistors, you can access them as an array
@@ -35,6 +38,8 @@ ecat_pdo_entry_t knee_tx_pdos[] = {{((void**)(&knee_medulla_id_pdo)),1},
                               {((void**)(&motor_encoder_timestamp_pdo)),2},
                               {((void**)(&knee_encoder_pdo)),4},
                               {((void**)(&knee_encoder_timestamp_pdo)),2},
+                              {((void**)(&ankle_encoder_pdo)),4},
+                              {((void**)(&ankle_encoder_timestamp_pdo)),2},
                               {((void**)(&logic_voltage_pdo)),2},
                               {((void**)(&thermistor_pdo)),12}};
 
@@ -42,6 +47,7 @@ ecat_pdo_entry_t knee_tx_pdos[] = {{((void**)(&knee_medulla_id_pdo)),1},
 // Structs for the medulla library
 limit_sw_port_t limit_sw_port;
 biss_encoder_t knee_encoder, motor_encoder;
+renishaw_ssi_encoder_t ankle_encoder;
 adc_port_t adc_port_a, adc_port_b;
 
 // variables for filtering thermistor and voltage values
@@ -115,6 +121,11 @@ void knee_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer
 	#endif
 	knee_encoder = biss_encoder_init(&PORTD,&SPID,timestamp_timer,32,knee_encoder_pdo,knee_encoder_timestamp_pdo);
 
+	#ifdef DEBUG_HIGH
+	printf("[Medulla knee] Initializing ankle encoder\n");
+	#endif
+	ankle_encoder = renishaw_ssi_encoder_init(&PORTF,&SPIF,timestamp_timer,ankle_encoder_pdo,ankle_encoder_timestamp_pdo);
+
 	// Start reading the ADCs
 	adc_start_read(&adc_port_a);
 	adc_start_read(&adc_port_b);
@@ -151,6 +162,7 @@ void knee_update_inputs(uint8_t id) {
 	// Start reading from the encoders
 	biss_encoder_start_reading(&motor_encoder);
 	biss_encoder_start_reading(&knee_encoder);
+	renishaw_ssi_encoder_start_reading(&ankle_encoder);
 
 	// while we are waiting for things to complete, get the limit switch state
 	*knee_limit_switch_pdo = limit_sw_get_port(&limit_sw_port);
@@ -160,6 +172,7 @@ void knee_update_inputs(uint8_t id) {
 	while (!adc_read_complete(&adc_port_b));
  	while (!biss_encoder_read_complete(&motor_encoder));
 	while (!biss_encoder_read_complete(&knee_encoder));
+	while (!renishaw_ssi_encoder_read_complete(&ankle_encoder));
 
 	// make sure our encoder data is accurate, if it is, then update, if it's not, then increment the error coutner.
 	if (biss_encoder_data_valid(&motor_encoder)) {
@@ -177,6 +190,9 @@ void knee_update_inputs(uint8_t id) {
 		*knee_error_flags_pdo |= medulla_error_encoder;
 		knee_encoder_error_counter++;
 	}
+
+    // no error checking for ankle encoder
+    renishaw_ssi_encoder_process_data(&ankle_encoder);
 
 	if (((knee_therm_prev_val[0]>thermistor_pdo[0]) && (knee_therm_prev_val[0]-thermistor_pdo[0] < 50)) ||
 	    ((knee_therm_prev_val[0]<thermistor_pdo[0]) && (thermistor_pdo[0]-knee_therm_prev_val[0] < 50)))

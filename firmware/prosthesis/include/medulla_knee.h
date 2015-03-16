@@ -12,6 +12,7 @@
 #include "limit_switch.h"
 #include "adc.h"
 #include "biss_encoder.h"
+#include "renishaw_ssi_encoder.h"
 
 // Defines for which systems to check for error state
 #define ERROR_CHECK_LIMIT_SWITCH
