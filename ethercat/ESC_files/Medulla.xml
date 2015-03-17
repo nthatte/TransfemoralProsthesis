@@ -243,6 +243,24 @@
 				</TxPdo>
 				<TxPdo Fixed="1" Sm="3">
 					<Index>#x1A03</Index>
+					<Name>Ankle Encoder</Name>
+					<Entry>
+						<Index>#x0007</Index>
+						<SubIndex>3</SubIndex>
+						<BitLen>32</BitLen>
+						<Name>Ankle Encoder</Name>
+						<DataType>UDINT</DataType>
+					</Entry>					
+					<Entry>
+						<Index>#x0006</Index>
+						<SubIndex>5</SubIndex>
+						<BitLen>16</BitLen>
+						<Name>Ankle Encoder Timestamp</Name>
+						<DataType>UINT</DataType>
+					</Entry>
+				</TxPdo>
+				<TxPdo Fixed="1" Sm="3">
+					<Index>#x1A04</Index>
 					<Name>Power</Name>
 					<Entry>
 						<Index>#x0006</Index>
@@ -253,7 +271,7 @@
 					</Entry>
 				</TxPdo>
 				<TxPdo Fixed="1" Sm="3">
-					<Index>#x1A04</Index>
+					<Index>#x1A05</Index>
 					<Name>Thermistors</Name>
 					<Entry>
 						<Index>#x0006</Index>
