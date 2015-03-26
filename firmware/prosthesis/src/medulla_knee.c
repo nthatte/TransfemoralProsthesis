@@ -82,7 +82,8 @@ void knee_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer
 	#ifdef DEBUG_HIGH
 	printf("[Medulla Knee] Initializing PDO entries\n");
 	#endif
-	ecat_configure_pdo_entries(ecat_slave, knee_rx_pdos, MEDULLA_KNEE_RX_PDO_COUNT, knee_tx_pdos, MEDULLA_KNEE_TX_PDO_COUNT-5); 
+	//ecat_configure_pdo_entries(ecat_slave, knee_rx_pdos, MEDULLA_KNEE_RX_PDO_COUNT, knee_tx_pdos, MEDULLA_KNEE_TX_PDO_COUNT-5); 
+	ecat_configure_pdo_entries(ecat_slave, knee_rx_pdos, MEDULLA_KNEE_RX_PDO_COUNT, knee_tx_pdos, MEDULLA_KNEE_TX_PDO_COUNT); 
 
 	#ifdef DEUBG_HIGH
 	printf("[Medulla knee] Initializing limit switches\n");
