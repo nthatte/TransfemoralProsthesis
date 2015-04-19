@@ -1,4 +1,5 @@
 #include "medulla_knee.h"
+#include <stdio.h>
 
 //--- Define ethercat PDO entries ---//
 
@@ -22,6 +23,7 @@ uint16_t *knee_encoder_timestamp_pdo;
 uint32_t *ankle_encoder_pdo;
 uint16_t *ankle_encoder_timestamp_pdo;
 
+uint16_t *flexiforce_pdo;
 uint16_t *logic_voltage_pdo;
 
 uint16_t *thermistor_pdo; // Pointer to all the thermistors, you can access them as an array
@@ -40,6 +42,7 @@ ecat_pdo_entry_t knee_tx_pdos[] = {{((void**)(&knee_medulla_id_pdo)),1},
                               {((void**)(&knee_encoder_timestamp_pdo)),2},
                               {((void**)(&ankle_encoder_pdo)),4},
                               {((void**)(&ankle_encoder_timestamp_pdo)),2},
+                              {((void**)(&flexiforce_pdo)),4},
                               {((void**)(&logic_voltage_pdo)),2},
                               {((void**)(&thermistor_pdo)),12}};
 
@@ -53,8 +56,9 @@ adc_port_t adc_port_a, adc_port_b;
 // variables for filtering thermistor and voltage values
 uint8_t limit_switch_counter;
 uint8_t knee_damping_cnt;
+uint8_t logic_voltage_counter;
 uint8_t thermistor_counter;
-uint16_t logic_voltage_counter;
+uint16_t flexiforce_counter;
 uint8_t motor_encoder_error_counter;
 uint8_t knee_encoder_error_counter;
 bool knee_send_current_read;
@@ -65,6 +69,7 @@ uint16_t knee_therm_prev_val[6];
 void knee_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer, uint8_t *rx_sm_buffer, medulla_state_t **commanded_state, medulla_state_t **current_state, uint8_t **packet_counter, TC0_t *timestamp_timer, uint16_t **master_watchdog) {
 
 	thermistor_counter = 0;
+	flexiforce_counter = 0;
 	logic_voltage_counter = 0;
 	knee_timestamp_timer = timestamp_timer;
 	*knee_error_flags_pdo = 0;
@@ -111,6 +116,8 @@ void knee_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer
 	printf("[Medulla knee] Initializing voltage monitoring pins\n");
 	#endif
 	adc_init_pin(&adc_port_b,6,logic_voltage_pdo);
+	adc_init_pin(&adc_port_b,0,flexiforce_pdo+0);
+	adc_init_pin(&adc_port_b,2,flexiforce_pdo+1);
 
 	#ifdef DEBUG_HIGH
 	printf("[Medulla knee] Initializing motor encoder\n");
@@ -195,29 +202,41 @@ void knee_update_inputs(uint8_t id) {
     // no error checking for ankle encoder
     renishaw_ssi_encoder_process_data(&ankle_encoder);
 
-	if (((knee_therm_prev_val[0]>thermistor_pdo[0]) && (knee_therm_prev_val[0]-thermistor_pdo[0] < 50)) ||
-	    ((knee_therm_prev_val[0]<thermistor_pdo[0]) && (thermistor_pdo[0]-knee_therm_prev_val[0] < 50)))
-		knee_therm_prev_val[0] = thermistor_pdo[0];
+    if (((knee_therm_prev_val[0]>thermistor_pdo[0]) &&
+            (knee_therm_prev_val[0]-thermistor_pdo[0] < 50)) ||
+            ((knee_therm_prev_val[0]<thermistor_pdo[0]) &&
+            (thermistor_pdo[0]-knee_therm_prev_val[0] < 50))) 
+        knee_therm_prev_val[0] = thermistor_pdo[0];
 
-	if (((knee_therm_prev_val[1]>thermistor_pdo[1]) && (knee_therm_prev_val[1]-thermistor_pdo[1] < 50)) ||
-	    ((knee_therm_prev_val[1]<thermistor_pdo[1]) && (thermistor_pdo[1]-knee_therm_prev_val[1] < 50)))
-		knee_therm_prev_val[1] = thermistor_pdo[1];
+    if (((knee_therm_prev_val[1]>thermistor_pdo[1]) &&
+            (knee_therm_prev_val[1]-thermistor_pdo[1] < 50)) ||
+            ((knee_therm_prev_val[1]<thermistor_pdo[1]) &&
+            (thermistor_pdo[1]-knee_therm_prev_val[1] < 50))) 
+        knee_therm_prev_val[1] = thermistor_pdo[1];
 
-	if (((knee_therm_prev_val[2]>thermistor_pdo[2]) && (knee_therm_prev_val[2]-thermistor_pdo[2] < 50)) ||
-	    ((knee_therm_prev_val[2]<thermistor_pdo[2]) && (thermistor_pdo[2]-knee_therm_prev_val[2] < 50)))
-		knee_therm_prev_val[2] = thermistor_pdo[2];
+    if (((knee_therm_prev_val[2]>thermistor_pdo[2]) &&
+            (knee_therm_prev_val[2]-thermistor_pdo[2] < 50)) ||
+            ((knee_therm_prev_val[2]<thermistor_pdo[2]) &&
+            (thermistor_pdo[2]-knee_therm_prev_val[2] < 50))) 
+        knee_therm_prev_val[2] = thermistor_pdo[2];
 
-	if (((knee_therm_prev_val[3]>thermistor_pdo[3]) && (knee_therm_prev_val[3]-thermistor_pdo[3] < 1000)) ||
-	    ((knee_therm_prev_val[3]<thermistor_pdo[3]) && (thermistor_pdo[3]-knee_therm_prev_val[3] < 1000)))
-		knee_therm_prev_val[3] = thermistor_pdo[3];
+    if (((knee_therm_prev_val[3]>thermistor_pdo[3]) &&
+            (knee_therm_prev_val[3]-thermistor_pdo[3] < 1000)) ||
+            ((knee_therm_prev_val[3]<thermistor_pdo[3]) &&
+            (thermistor_pdo[3]-knee_therm_prev_val[3] < 1000))) 
+        knee_therm_prev_val[3] = thermistor_pdo[3];
 
-	if (((knee_therm_prev_val[4]>thermistor_pdo[4]) && (knee_therm_prev_val[4]-thermistor_pdo[4] < 50)) ||
-	    ((knee_therm_prev_val[4]<thermistor_pdo[4]) && (thermistor_pdo[4]-knee_therm_prev_val[4] < 50)))
-		knee_therm_prev_val[4] = thermistor_pdo[4];
+    if (((knee_therm_prev_val[4]>thermistor_pdo[4]) &&
+            (knee_therm_prev_val[4]-thermistor_pdo[4] < 50)) ||
+            ((knee_therm_prev_val[4]<thermistor_pdo[4]) &&
+            (thermistor_pdo[4]-knee_therm_prev_val[4] < 50))) 
+        knee_therm_prev_val[4] = thermistor_pdo[4];
 
-	if (((knee_therm_prev_val[5]>thermistor_pdo[5]) && (knee_therm_prev_val[5]-thermistor_pdo[5] < 50)) ||
-	    ((knee_therm_prev_val[5]<thermistor_pdo[5]) && (thermistor_pdo[5]-knee_therm_prev_val[5] < 50)))
-		knee_therm_prev_val[5] = thermistor_pdo[5];
+    if (((knee_therm_prev_val[5]>thermistor_pdo[5]) &&
+            (knee_therm_prev_val[5]-thermistor_pdo[5] < 50)) ||
+            ((knee_therm_prev_val[5]<thermistor_pdo[5]) &&
+            (thermistor_pdo[5]-knee_therm_prev_val[5] < 50))) 
+        knee_therm_prev_val[5] = thermistor_pdo[5];
 
 	//knee_send_current_read = true;
 }
@@ -313,6 +332,7 @@ void knee_reset_error() {
 	*knee_error_flags_pdo = 0;
 	thermistor_counter = 0;
 	logic_voltage_counter = 0;
+	flexiforce_counter = 0;
 	motor_encoder_error_counter = 0;
 	knee_encoder_error_counter = 0;
 	knee_damping_cnt = 0;

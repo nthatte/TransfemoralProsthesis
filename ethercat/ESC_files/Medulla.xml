@@ -261,6 +261,24 @@
 				</TxPdo>
 				<TxPdo Fixed="1" Sm="3">
 					<Index>#x1A04</Index>
+					<Name>Flexiforce Sensors</Name>
+					<Entry>
+						<Index>#x0006</Index>
+						<SubIndex>6</SubIndex>
+						<BitLen>16</BitLen>
+						<Name>Flexiforce 0</Name>
+						<DataType>UINT</DataType>
+					</Entry>
+					<Entry>
+						<Index>#x0006</Index>
+						<SubIndex>7</SubIndex>
+						<BitLen>16</BitLen>
+						<Name>Flexiforce 1</Name>
+						<DataType>UINT</DataType>
+					</Entry>
+				</TxPdo>
+				<TxPdo Fixed="1" Sm="3">
+					<Index>#x1A05</Index>
 					<Name>Power</Name>
 					<Entry>
 						<Index>#x0006</Index>
@@ -271,7 +289,7 @@
 					</Entry>
 				</TxPdo>
 				<TxPdo Fixed="1" Sm="3">
-					<Index>#x1A05</Index>
+					<Index>#x1A06</Index>
 					<Name>Thermistors</Name>
 					<Entry>
 						<Index>#x0006</Index>

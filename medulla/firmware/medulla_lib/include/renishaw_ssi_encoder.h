@@ -17,7 +17,6 @@
 #include <util/delay.h>
 #include <stdbool.h>
 #include "spi.h"
-#include <stdio.h>
 
 /** @brief This struct stores the confiuration of an encoder.
  */
