@@ -23,7 +23,8 @@
 #include "medulla_leg.h"
 #include "medulla_boom.h"
 #include "medulla_hip.h"
-#include "medulla_knee.h"
+//#include "medulla_knee.h"
+#include "medulla_prosthesis.h"
 
 #include "amplifier.h"
 

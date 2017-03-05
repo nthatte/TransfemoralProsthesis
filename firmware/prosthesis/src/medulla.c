@@ -152,6 +152,7 @@ int main(void) {
 			wait_loop = boom_wait_loop;
 			break;
 
+        /*
 		case MEDULLA_KNEE_ID_PREFIX:
 			#if defined DEBUG_HIGH || defined DEBUG_LOW
 			printf("loading knee medulla.\n");
@@ -167,6 +168,23 @@ int main(void) {
 			check_halt = knee_check_halt;
 			reset_error = knee_reset_error;
 			wait_loop = knee_wait_loop;
+			break;
+        */
+		case MEDULLA_PROS_ID_PREFIX:
+			#if defined DEBUG_HIGH || defined DEBUG_LOW
+			printf("loading prosthesis medulla.\n");
+			#endif
+			initialize = pros_initialize;
+			enable_outputs = pros_enable_outputs;
+			disable_outputs = pros_disable_outputs;
+			update_inputs = pros_update_inputs;
+			run_halt = pros_run_halt;
+			update_outputs = pros_update_outputs;
+			estop = pros_estop;
+			check_error = pros_check_error;
+			check_halt = pros_check_halt;
+			reset_error = pros_reset_error;
+			wait_loop = pros_wait_loop;
 			break;
 
         /*
