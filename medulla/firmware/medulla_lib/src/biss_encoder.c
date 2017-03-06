@@ -78,6 +78,12 @@ uint8_t biss_encoder_process_data(biss_encoder_t *encoder) {
 
 	*(encoder->timestamp_pointer) += 4*encoder->cnt_per_us; // Add 4 microseconds to the timestamp because the actual measurement is taken 4 microseconds after the first rising edge of the clock.
 
+    printf("\n inbuf: ");
+    for (uint8_t i = 0; i < 5; i++){
+        printf("%" PRIx8 " ", encoder->input_buffer[i]);
+    }
+    printf(" data: %" PRIu32, *(encoder->data_pointer));
+
 	// The last byte is the status byte, so we can just return that
 	return encoder->input_buffer[4];
 }
@@ -87,7 +93,8 @@ bool biss_encoder_read_complete(biss_encoder_t *encoder) {
 }
 
 bool biss_encoder_data_valid(biss_encoder_t *encoder) {
-	return biss_encoder_read_complete(encoder) && ((encoder->input_buffer[4] & (1<<7)) != 0);
+	//return biss_encoder_read_complete(encoder) && ((encoder->input_buffer[4] & (1<<7)) != 0);
+	return biss_encoder_read_complete(encoder);
 }
 
 
