@@ -103,11 +103,11 @@ void pros_initialize(uint8_t id, ecat_slave_t *ecat_slave, uint8_t *tx_sm_buffer
 	knee_encoder = biss_encoder_init(&PORTC,&SPIC,timestamp_timer,32,
         knee_encoder_pdo,knee_encoder_timestamp_pdo);
 
-	//#ifdef DEBUG_HIGH
-	//printf("[Medulla pros] Initializing ankle encoder\n");
-	//#endif
-	//ankle_encoder = netzer_encoder_init(&PORTD,&SPID,timestamp_timer,32,
-    //    ankle_encoder_pdo,ankle_encoder_timestamp_pdo);
+	#ifdef DEBUG_HIGH
+	printf("[Medulla pros] Initializing ankle encoder\n");
+	#endif
+	ankle_encoder = netzer_encoder_init(&PORTD,&SPID,timestamp_timer,32,
+        ankle_encoder_pdo,ankle_encoder_timestamp_pdo);
 
 	// Start reading the ADCs
 	adc_start_read(&adc_port_a);
@@ -137,7 +137,7 @@ void pros_update_inputs(uint8_t id) {
 	
 	// Start reading from the encoders
 	biss_encoder_start_reading(&knee_encoder);
-	//netzer_encoder_start_reading(&ankle_encoder);
+    netzer_encoder_start_reading(&ankle_encoder);
 
 	// while we are waiting for things to complete, get the limit switch state
 	*pros_limit_switch_pdo = limit_sw_get_port(&limit_sw_port);
@@ -146,7 +146,7 @@ void pros_update_inputs(uint8_t id) {
 	while (!adc_read_complete(&adc_port_a));
 	while (!adc_read_complete(&adc_port_b));
  	while (!biss_encoder_read_complete(&knee_encoder));
-	//while (!netzer_encoder_read_complete(&ankle_encoder));
+	while (!netzer_encoder_read_complete(&ankle_encoder));
 
     // make sure our encoder data is accurate, if it is, then update, if it's
     // not, then increment the error coutner.
@@ -158,7 +158,6 @@ void pros_update_inputs(uint8_t id) {
 		knee_encoder_error_counter++;
 	}
 	
-    /*
 	if (netzer_encoder_data_valid(&ankle_encoder)) {
 		netzer_encoder_process_data(&ankle_encoder);
 	}
@@ -166,7 +165,6 @@ void pros_update_inputs(uint8_t id) {
 		*pros_error_flags_pdo |= medulla_error_encoder;
 		ankle_encoder_error_counter++;
 	}
-    */
 }
 
 bool pros_run_halt(uint8_t id) {
@@ -218,7 +216,7 @@ bool pros_check_error(uint8_t id) {
 
 	#ifdef ERROR_CHECK_ENCODER
 	// Check the encoder error counters
-	if ((motor_encoder_error_counter > 10) || (pros_encoder_error_counter > 10)) {
+	if ((knee_encoder_error_counter > 10) || (ankle_encoder_error_counter > 10)) {
 		#if defined DEBUG_LOW || DEBUG_HIGH	
 		printf("[Medulla pros] Encoder read error\n");
 		#endif

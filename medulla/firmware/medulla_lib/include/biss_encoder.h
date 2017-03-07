@@ -15,9 +15,6 @@
  *  in, when the encoder is sampled, the value of this counter is also stored.
  */
 
-#include <stdio.h>
-#include <inttypes.h>
-
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdbool.h>

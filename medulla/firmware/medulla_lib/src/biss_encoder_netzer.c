@@ -77,17 +77,9 @@ int netzer_encoder_start_reading(netzer_encoder_t *encoder) {
 
 uint8_t netzer_encoder_process_data(netzer_encoder_t *encoder) {
 	// Fill the data pointer. Since the xMega is little-endian, we have to swap the byte order, by shiffing the data in one byte at a time.
-	*(encoder->data_pointer) =(((uint32_t)encoder->input_buffer[0]) << 11) |
-                              (((uint32_t)encoder->input_buffer[1]) <<  3) |
-                              (((uint32_t)encoder->input_buffer[2]) >>  5);
-
-    /**
-    printf("\n inbuf: ");
-    for (uint8_t i = 0; i < 4; i++){
-        printf("%" PRIx8 " ", encoder->input_buffer[i]);
-    }
-    printf(" data: %" PRIx32 "\n", *(encoder->data_pointer));
-    */
+	*(encoder->data_pointer) =(((uint32_t)encoder->input_buffer[0]) << 10) |
+                              (((uint32_t)encoder->input_buffer[1]) <<  2) |
+                              (((uint32_t)encoder->input_buffer[2]) >>  6);
 
 	*(encoder->timestamp_pointer) += 4*encoder->cnt_per_us; // Add 4 microseconds to the timestamp because the actual measurement is taken 4 microseconds after the first rising edge of the clock.
 
