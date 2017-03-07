@@ -93,8 +93,7 @@ bool biss_encoder_read_complete(biss_encoder_t *encoder) {
 }
 
 bool biss_encoder_data_valid(biss_encoder_t *encoder) {
-	//return biss_encoder_read_complete(encoder) && ((encoder->input_buffer[4] & (1<<7)) != 0);
-	return biss_encoder_read_complete(encoder);
+    return biss_encoder_read_complete(encoder) && ((encoder->input_buffer[4] & (1<<7)) != 0);
 }
 
 
