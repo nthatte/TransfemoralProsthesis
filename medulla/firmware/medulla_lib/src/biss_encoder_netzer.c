@@ -92,7 +92,7 @@ bool netzer_encoder_read_complete(netzer_encoder_t *encoder) {
 }
 
 bool netzer_encoder_data_valid(netzer_encoder_t *encoder) {
-	return netzer_encoder_read_complete(encoder) && ((encoder->input_buffer[2] & (1<<4)) != 0);
+	return netzer_encoder_read_complete(encoder) && ((encoder->input_buffer[2] & (1<<5)) != 0);
 }
 
 
