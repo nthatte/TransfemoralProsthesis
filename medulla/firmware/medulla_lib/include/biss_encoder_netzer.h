@@ -39,7 +39,7 @@ typedef struct {
  *  
  *  @param SPI_PORT SPI_t struct for which to define the interrupt.
  */ 
-#define BISS_ENCODER_USES_PORT SPI_USES_PORT
+// #define BISS_ENCODER_USES_PORT SPI_USES_PORT
 
 /** @brief Creates and initializes a Biss-C encoder struct
  *

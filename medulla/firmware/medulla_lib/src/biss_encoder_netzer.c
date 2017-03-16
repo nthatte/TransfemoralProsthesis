@@ -1,17 +1,19 @@
 #include "biss_encoder_netzer.h"
+//#include <stdio.h>
+//#include <inttypes.h>
 
-#define _BISS_ENCODER_SEND_CLOCK \
+#define _NETZER_ENCODER_SEND_CLOCK \
 encoder->spi_port.spi_port->OUTCLR = (1<<7); \
-_delay_us(0.125);        /* Half of the 2 Mhz period*/ \
+_delay_us(0.25);        /* Half of the 2 Mhz period*/ \
 encoder->spi_port.spi_port->OUTSET = (1<<7); \
-_delay_us(0.125);        /* Other half of the 2 Mhz period*/
+_delay_us(0.25);        /* Other half of the 2 Mhz period*/
 
 netzer_encoder_t netzer_encoder_init(PORT_t *spi_port, SPI_t *spi_register, void *timestamp_timer, uint16_t cnt_per_us, uint32_t *data_pointer, uint16_t *timestamp_pointer) {
 
 	netzer_encoder_t encoder;
 
 	// setup the encoder struct
-	encoder.spi_port = spi_init_port(spi_port, spi_register, spi_div16, false);
+	encoder.spi_port = spi_init_port(spi_port, spi_register, spi_div32, false);
 //	encoder.spi_port.spi_register->CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_MODE_0_gc | SPI_PRESCALER_DIV16_gc;
 	encoder.timestamp_timer = (TC0_t*)timestamp_timer;
 	encoder.cnt_per_us = cnt_per_us;
@@ -47,26 +49,32 @@ int netzer_encoder_start_reading(netzer_encoder_t *encoder) {
 
 	// Send the two start bits. Since we need to record the time of the first rising edge of the clock we can't use the send clock macro on the first clock.
 	encoder->spi_port.spi_port->OUTCLR = (1<<7);
-	_delay_us(0.125);
+	_delay_us(0.25);
 	cli();
 	*(encoder->timestamp_pointer) = encoder->timestamp_timer->CNT; // Record the time of the rising edge
 	encoder->spi_port.spi_port->OUTSET = (1<<7);
 	sei();
-	_delay_us(0.125);
-	_BISS_ENCODER_SEND_CLOCK // Now send the second clock
+	_delay_us(0.25);
+	_NETZER_ENCODER_SEND_CLOCK // Now send the second clock
 	
-	encoder->spi_port.spi_port->OUTCLR = (1<<7);                                                             
+    /*
+	encoder->spi_port.spi_port->OUTCLR = (1<<7);        
+	_delay_us(0.25);
+
 	_delay_us(0.0625);
 	while ((encoder->spi_port.spi_port->IN & (1<<6)) == 0) {
 		encoder->spi_port.spi_port->OUTSET = (1<<7);
-		_delay_us(0.0125);
+		_delay_us(0..25);
 		encoder->spi_port.spi_port->OUTCLR = (1<<7);
-		_delay_us(0.0125);
+		_delay_us(0..25);
 	}
 	encoder->spi_port.spi_port->OUTSET = (1<<7);
-        _delay_us(0.125);
+    _delay_us(0.25);
+    */
 	
-	_BISS_ENCODER_SEND_CLOCK
+	_NETZER_ENCODER_SEND_CLOCK
+	_NETZER_ENCODER_SEND_CLOCK
+	_NETZER_ENCODER_SEND_CLOCK
 
 	encoder->spi_port.spi_register->CTRL |= SPI_ENABLE_bm;
 	spi_start_receive(&(encoder->spi_port), encoder->input_buffer,4);
@@ -77,9 +85,22 @@ int netzer_encoder_start_reading(netzer_encoder_t *encoder) {
 
 uint8_t netzer_encoder_process_data(netzer_encoder_t *encoder) {
 	// Fill the data pointer. Since the xMega is little-endian, we have to swap the byte order, by shiffing the data in one byte at a time.
-	*(encoder->data_pointer) =(((uint32_t)encoder->input_buffer[0]) << 10) |
-                              (((uint32_t)encoder->input_buffer[1]) <<  2) |
-                              (((uint32_t)encoder->input_buffer[2]) >>  6);
+	*(encoder->data_pointer) =(((uint32_t)encoder->input_buffer[0]) << 9) |
+                              (((uint32_t)encoder->input_buffer[1]) << 1)  |
+                              (((uint32_t)encoder->input_buffer[2]) >> 7);
+
+    /*
+    printf("% " PRIx8 " ", encoder->input_buffer[0]);
+    printf("% " PRIx8 " ", encoder->input_buffer[1]);
+    printf("% " PRIx8 " ", encoder->input_buffer[2]);
+    printf("% " PRIx8 " ", encoder->input_buffer[3]);
+    printf("\n");
+
+    printf("% " PRIx32 " ", ((uint32_t)encoder->input_buffer[0]) << 10);
+    printf("% " PRIx32 " ", ((uint32_t)encoder->input_buffer[1]) << 2);
+    printf("% " PRIx32 " ", ((uint32_t)encoder->input_buffer[2]) >> 6);
+    printf("\n");
+    */
 
 	*(encoder->timestamp_pointer) += 4*encoder->cnt_per_us; // Add 4 microseconds to the timestamp because the actual measurement is taken 4 microseconds after the first rising edge of the clock.
 
